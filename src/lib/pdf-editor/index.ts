@@ -11,6 +11,10 @@ export { PdfRendererService } from './services/pdf-renderer.service';
 export { ToolService } from './services/tool.service';
 export { AnnotationService } from './services/annotation.service';
 export { ExportService } from './services/export.service';
+export { HistoryService } from './services/history.service';
+
+// Tokens
+export { PDFJS_WORKER_URL } from './tokens';
 
 // Models & types
 export * from './models';

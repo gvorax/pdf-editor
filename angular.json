@@ -6,6 +6,26 @@
   },
   "newProjectRoot": "projects",
   "projects": {
+    "pdf-editor-lib": {
+      "projectType": "library",
+      "root": "src/lib/pdf-editor",
+      "sourceRoot": "src/lib",
+      "prefix": "pdf",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "options": {
+            "project": "ng-package.json",
+            "tsConfig": "tsconfig.lib.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "tsconfig.lib.json"
+            }
+          }
+        }
+      }
+    },
     "pdf-editor": {
       "projectType": "application",
       "schematics": {},

@@ -1,9 +1,11 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import * as pdfjsLib from 'pdfjs-dist';
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
+import { PDFJS_WORKER_URL } from '../tokens';
 
 @Injectable({ providedIn: 'root' })
 export class PdfRendererService {
+  private readonly workerUrl = inject(PDFJS_WORKER_URL);
   private pdfDoc: PDFDocumentProxy | null = null;
   private pdfWorker: InstanceType<typeof pdfjsLib.PDFWorker> | null = null;
 
@@ -65,7 +67,7 @@ export class PdfRendererService {
     // A classic Worker cannot execute ESM, so we must use { type: 'module' }.
     // We pass the Worker to PDFWorker.create() and hand that to getDocument()
     // so pdfjs owns the lifecycle rather than using the global workerSrc/workerPort.
-    const port = new Worker('/pdf.worker.mjs', { type: 'module' });
+    const port = new Worker(this.workerUrl, { type: 'module' });
     this.pdfWorker = pdfjsLib.PDFWorker.create({ port });
 
     this.pdfDoc = await pdfjsLib.getDocument({
