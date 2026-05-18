@@ -1,6 +1,6 @@
 {
   "name": "@gvorax/pdf-editor",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Angular PDF editor library with annotation support (pen, highlighter, shapes, text, eraser)",
   "keywords": [
     "angular",

@@ -104,7 +104,7 @@ const ICONS = {
     undo: svg(`<path d="M3 10h11a5 5 0 0 1 0 10H9M3 10l4-4M3 10l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`),
     redo: svg(`<path d="M21 10H10a5 5 0 0 0 0 10h5M21 10l-4-4M21 10l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`),
     zoomFit: svg(`<rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>`),
-    save: svg(`<path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M17 21v-8H7v8M7 3v5h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`),
+    save: svg(`<path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M17 21v-8H7v8M7 3v5h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`),
     upload: svg(`<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`),
 };
 const ALL_TOOLS = [
@@ -1016,13 +1016,6 @@ class PdfViewerComponent {
         </div>
       }
 
-      @if (rendererService.isLoading()) {
-        <div class="pdf-loading">
-          <div class="pdf-spinner"></div>
-          <span>PDF yuklanmoqda...</span>
-        </div>
-      }
-
       @if (rendererService.error()) {
         <div class="pdf-error">
           <span>Xato: {{ rendererService.error() }}</span>
@@ -1053,13 +1046,6 @@ i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "21.2.13", ngImpo
             [width]="page.width"
             [height]="page.height"
           />
-        </div>
-      }
-
-      @if (rendererService.isLoading()) {
-        <div class="pdf-loading">
-          <div class="pdf-spinner"></div>
-          <span>PDF yuklanmoqda...</span>
         </div>
       }
 
