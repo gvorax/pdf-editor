@@ -22,7 +22,7 @@ const ICONS = {
   arrow:     svg(`<path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`),
   line:      svg(`<path d="M4 20L20 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`),
   eraser:    svg(`<path d="M20 20H7L3 16l11-11 6 6-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`),
-  palette:   svg(`<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="9" cy="10" r="1.2" fill="currentColor"/><circle cx="15" cy="10" r="1.2" fill="currentColor"/><circle cx="12" cy="15" r="1.2" fill="currentColor"/>`),
+  palette:   svg(`<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5S12.5 5.5 12 3c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`),
   zoomIn:    svg(`<circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M11 8v6M8 11h6M20 20l-3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`),
   zoomOut:   svg(`<circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 11h6M20 20l-3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`),
   undo:      svg(`<path d="M3 10h11a5 5 0 0 1 0 10H9M3 10l4-4M3 10l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`),
@@ -166,16 +166,14 @@ const ALL_TOOLS: ToolDef[] = [
       <div class="pfe-divider"></div>
 
       <!-- Actions -->
-      <div class="pfe-toolbar__group">
-        <button class="pfe-action-btn pfe-action-btn--primary" title="PDF saqlash" (click)="save.emit()">
-          <span class="pfe-icon" [innerHTML]="icons.save | safeHtml"></span>
-          <span class="pfe-action-label">Saqlash</span>
-        </button>
-        <button class="pfe-action-btn" title="PDF yuklash" (click)="upload.emit()">
-          <span class="pfe-icon" [innerHTML]="icons.upload | safeHtml"></span>
-          <span class="pfe-action-label">Yuklash</span>
-        </button>
-      </div>
+      @if (config?.showSave !== false) {
+        <div class="pfe-toolbar__group">
+          <button class="pfe-action-btn pfe-action-btn--primary" title="PDF saqlash" (click)="save.emit()">
+            <span class="pfe-icon" [innerHTML]="icons.save | safeHtml"></span>
+            <span class="pfe-action-label">Saqlash</span>
+          </button>
+        </div>
+      }
     </div>
   `,
   styles: [`

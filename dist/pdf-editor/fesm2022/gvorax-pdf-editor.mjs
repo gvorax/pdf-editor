@@ -550,6 +550,25 @@ class PdfCanvasComponent {
     activeShape = null;
     pendingUndo = null;
     isUndoRedoing = false;
+    keydownHandler = (e) => {
+        if (e.key !== 'Delete' && e.key !== 'Backspace')
+            return;
+        const tool = this.toolService.activeTool();
+        if (tool !== ToolType.Select && tool !== ToolType.Eraser)
+            return;
+        if (!this.fc)
+            return;
+        const targets = this.fc.getActiveObjects();
+        if (!targets.length)
+            return;
+        if (targets.some((o) => o.isEditing))
+            return;
+        e.preventDefault();
+        this.markDirty();
+        targets.forEach(o => this.fc.remove(o));
+        this.fc.discardActiveObject();
+        this.fc.requestRenderAll();
+    };
     toolService = inject(ToolService);
     annotationService = inject(AnnotationService);
     historyService = inject(HistoryService);
@@ -570,12 +589,14 @@ class PdfCanvasComponent {
             selection: false,
             enableRetinaScaling: false,
         });
-        this.fc.on('object:added', () => this.persist());
+        this.fc.on('object:added', (e) => { if (e.target)
+            this.attachDeleteControl(e.target); this.persist(); });
         this.fc.on('object:modified', () => this.persist());
         this.fc.on('object:removed', () => this.persist());
         this.fc.on('mouse:down', (e) => this.onMouseDown(e));
         this.fc.on('mouse:move', (e) => this.onMouseMove(e));
         this.fc.on('mouse:up', () => this.onMouseUp());
+        document.addEventListener('keydown', this.keydownHandler);
         this.loadSavedAnnotations();
         this.applyTool(this.toolService.activeTool(), this.toolService.options());
     }
@@ -608,6 +629,7 @@ class PdfCanvasComponent {
         if (saved) {
             this.isUndoRedoing = true;
             this.fc.loadFromJSON(JSON.parse(saved)).then(() => {
+                this.fc?.getObjects().forEach(o => this.attachDeleteControl(o));
                 this.fc?.renderAll();
                 this.isUndoRedoing = false;
             });
@@ -617,9 +639,9 @@ class PdfCanvasComponent {
         if (!this.fc || !this.fab)
             return;
         this.fc.isDrawingMode = false;
-        this.fc.selection = tool === ToolType.Select;
-        const isSelect = tool === ToolType.Select;
-        this.fc.getObjects().forEach(o => o.set({ selectable: isSelect, evented: isSelect }));
+        const isInteractive = tool === ToolType.Select || tool === ToolType.Eraser;
+        this.fc.selection = isInteractive;
+        this.fc.getObjects().forEach(o => o.set({ selectable: isInteractive, evented: isInteractive }));
         switch (tool) {
             case ToolType.Pen:
                 this.fc.isDrawingMode = true;
@@ -633,16 +655,49 @@ class PdfCanvasComponent {
                 this.fc.freeDrawingBrush.color = this.toRgba(opts.color, 0.4);
                 this.fc.freeDrawingBrush.width = Math.max(opts.size * 6, 20);
                 break;
-            case ToolType.Eraser:
-                this.fc.isDrawingMode = true;
-                this.fc.freeDrawingBrush = new this.fab.PencilBrush(this.fc);
-                this.fc.freeDrawingBrush.color = 'rgba(255,255,255,1)';
-                this.fc.freeDrawingBrush.width = opts.size * 5;
-                break;
             case ToolType.Select:
+            case ToolType.Eraser:
+                this.fc.getObjects().forEach(o => this.attachDeleteControl(o));
                 this.fc.renderAll();
                 break;
         }
+    }
+    attachDeleteControl(obj) {
+        if (!this.fab || obj.__deleteAdded)
+            return;
+        obj.__deleteAdded = true;
+        const ctrl = new this.fab.Control({
+            x: 0.5,
+            y: -0.5,
+            offsetX: 16,
+            offsetY: -16,
+            cursorStyle: 'pointer',
+            mouseUpHandler: (_e, transform) => {
+                this.markDirty();
+                this.fc.remove(transform.target);
+                this.fc.requestRenderAll();
+                return true;
+            },
+            render: (ctx, left, top) => {
+                ctx.save();
+                ctx.translate(left, top);
+                ctx.fillStyle = '#e53935';
+                ctx.beginPath();
+                ctx.arc(0, 0, 10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(-4, -4);
+                ctx.lineTo(4, 4);
+                ctx.moveTo(4, -4);
+                ctx.lineTo(-4, 4);
+                ctx.stroke();
+                ctx.restore();
+            },
+        });
+        obj.controls = { ...obj.controls, deleteControl: ctrl };
     }
     markDirty() {
         if (this.isUndoRedoing || !this.fc)
@@ -770,6 +825,7 @@ class PdfCanvasComponent {
             return;
         this.isUndoRedoing = true;
         await this.fc.loadFromJSON(JSON.parse(state));
+        this.fc.getObjects().forEach(o => this.attachDeleteControl(o));
         this.fc.renderAll();
         this.annotationService.savePageJson(this.pageIndex, state);
         this.isUndoRedoing = false;
@@ -783,6 +839,7 @@ class PdfCanvasComponent {
     getFabricCanvas() { return this.fc; }
     ngOnDestroy() {
         this.toolEffect.destroy();
+        document.removeEventListener('keydown', this.keydownHandler);
         this.fc?.dispose();
     }
     static ɵfac = i0.ɵɵngDeclareFactory({ minVersion: "12.0.0", version: "21.2.13", ngImport: i0, type: PdfCanvasComponent, deps: [], target: i0.ɵɵFactoryTarget.Component });

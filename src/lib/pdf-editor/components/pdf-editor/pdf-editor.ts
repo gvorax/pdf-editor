@@ -29,7 +29,7 @@ import { DEFAULT_COLORS } from '../../models';
                 [colors]="paletteColors"
                 [currentPage]="currentPage"
                 [pageCount]="rendererService.pageCount"
-                (save)="onSave()"
+                (save)="save()"
                 (upload)="onUploadClick()"
                 (zoomIn)="onZoomIn()"
                 (zoomOut)="onZoomOut()"
@@ -53,7 +53,7 @@ import { DEFAULT_COLORS } from '../../models';
                 [colors]="paletteColors"
                 [currentPage]="currentPage"
                 [pageCount]="rendererService.pageCount"
-                (save)="onSave()"
+                (save)="save()"
                 (upload)="onUploadClick()"
                 (zoomIn)="onZoomIn()"
                 (zoomOut)="onZoomOut()"
@@ -77,7 +77,7 @@ import { DEFAULT_COLORS } from '../../models';
                 [colors]="paletteColors"
                 [currentPage]="currentPage"
                 [pageCount]="rendererService.pageCount"
-                (save)="onSave()"
+                (save)="save()"
                 (upload)="onUploadClick()"
                 (zoomIn)="onZoomIn()"
                 (zoomOut)="onZoomOut()"
@@ -101,7 +101,7 @@ import { DEFAULT_COLORS } from '../../models';
                 [colors]="paletteColors"
                 [currentPage]="currentPage"
                 [pageCount]="rendererService.pageCount"
-                (save)="onSave()"
+                (save)="save()"
                 (upload)="onUploadClick()"
                 (zoomIn)="onZoomIn()"
                 (zoomOut)="onZoomOut()"
@@ -375,7 +375,7 @@ export class PdfEditorComponent implements OnInit, OnChanges, OnDestroy {
     if (file?.type === 'application/pdf') await this.loadSrc(file);
   }
 
-  async onSave(): Promise<void> {
+  async save(): Promise<void> {
     if (!this.viewerRef) return;
     const count = this.rendererService.pageCount();
     const fabricComps = this.viewerRef.canvasComps.toArray();

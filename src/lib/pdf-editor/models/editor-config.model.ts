@@ -7,6 +7,7 @@ export interface ToolbarConfig {
   position?: ToolbarPosition;
   tools?: ToolType[];
   show?: boolean;
+  showSave?: boolean;
 }
 
 export interface ZoomConfig {
@@ -30,7 +31,7 @@ export interface EditorConfig {
 
 export const DEFAULT_CONFIG: Required<EditorConfig> = {
   theme: 'light',
-  toolbar: { position: 'top', tools: Object.values(ToolType), show: true },
+  toolbar: { position: 'top', tools: Object.values(ToolType), show: true, showSave: true },
   defaultTool: ToolType.Pen,
   defaultColor: '#e53935',
   colors: ['#e53935', '#fb8c00', '#fdd835', '#43a047', '#1e88e5', '#8e24aa', '#000000', '#ffffff'],

@@ -125,6 +125,7 @@ export class AppComponent {
 | `theme` | `'light' \| 'dark' \| 'custom'` | `'light'` | Editor color theme |
 | `toolbar.position` | `'top' \| 'bottom' \| 'left' \| 'right'` | `'top'` | Toolbar placement |
 | `toolbar.show` | `boolean` | `true` | Show or hide the toolbar |
+| `toolbar.showSave` | `boolean` | `true` | Show or hide the Save button in the toolbar |
 | `toolbar.tools` | `ToolType[]` | all tools | Restrict which tools appear |
 | `defaultTool` | `ToolType` | `'pen'` | Active tool on load |
 | `defaultColor` | `string` | `'#e53935'` | Default drawing color |
@@ -150,7 +151,7 @@ export class AppComponent {
 | Circle | `'circle'` | Draw an ellipse |
 | Arrow | `'arrow'` | Draw an arrow |
 | Line | `'line'` | Draw a straight line |
-| Eraser | `'eraser'` | Erase drawn content |
+| Eraser | `'eraser'` | Click an annotation to select it, then click the red ✕ control or press `Delete` to remove it |
 
 ### Show only specific tools
 
@@ -221,6 +222,41 @@ config: EditorConfig = {
 | `Ctrl + Z` | Undo last annotation |
 | `Ctrl + Shift + Z` | Redo |
 | `Ctrl + Y` | Redo (alternative) |
+| `Delete` / `Backspace` | Delete selected annotation (Select or Eraser mode) |
+
+---
+
+## Triggering Save Programmatically
+
+Hide the toolbar's Save button and call `save()` from your own UI via `@ViewChild`:
+
+```typescript
+import { Component, ViewChild } from '@angular/core';
+import { PdfEditorComponent, EditorConfig } from '@gvorax/pdf-editor';
+
+@Component({
+  imports: [PdfEditorComponent],
+  template: `
+    <pdf-editor #editor [config]="config" style="width:100%;height:100vh;display:block;" />
+    <button (click)="editor.save()">Export PDF</button>
+  `,
+})
+export class AppComponent {
+  config: EditorConfig = {
+    toolbar: { showSave: false },
+  };
+}
+```
+
+Or call it from the component class:
+
+```typescript
+@ViewChild('editor') editor!: PdfEditorComponent;
+
+async handleSave(): Promise<void> {
+  await this.editor.save();
+}
+```
 
 ---
 

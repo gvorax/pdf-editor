@@ -16,6 +16,7 @@ declare class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy 
     private activeShape;
     private pendingUndo;
     private isUndoRedoing;
+    private readonly keydownHandler;
     private readonly toolService;
     private readonly annotationService;
     private readonly historyService;
@@ -24,6 +25,7 @@ declare class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy 
     ngOnChanges(changes: SimpleChanges): void;
     private loadSavedAnnotations;
     private applyTool;
+    private attachDeleteControl;
     private markDirty;
     private onMouseDown;
     private onMouseMove;
