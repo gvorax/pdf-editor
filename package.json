@@ -1,6 +1,18 @@
 {
-  "name": "pdf-editor",
-  "version": "0.0.0",
+  "name": "@gvorax/pdf-editor",
+  "version": "1.0.0",
+  "description": "Angular PDF editor library with annotation support (pen, highlighter, shapes, text, eraser)",
+  "keywords": ["angular", "pdf", "editor", "annotation", "fabric", "pdfjs"],
+  "author": "gvorax",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gvorax/pdf-editor.git"
+  },
+  "homepage": "https://github.com/gvorax/pdf-editor",
+  "bugs": {
+    "url": "https://github.com/gvorax/pdf-editor/issues"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

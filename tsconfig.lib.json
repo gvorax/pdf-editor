@@ -5,10 +5,14 @@
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler",
+    "experimentalDecorators": false,
     "declaration": true,
     "declarationMap": true,
     "inlineSources": true,
     "sourceMap": true
+  },
+  "angularCompilerOptions": {
+    "compilationMode": "partial"
   },
   "include": [
     "src/lib/**/*.ts"
