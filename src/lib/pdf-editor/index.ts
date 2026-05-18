@@ -14,7 +14,7 @@ export { ExportService } from './services/export.service';
 export { HistoryService } from './services/history.service';
 
 // Tokens
-export { PDFJS_WORKER_URL } from './tokens';
+export { PDFJS_WORKER_URL, PDFJS_WASM_URL } from './tokens';
 
 // Models & types
 export * from './models';

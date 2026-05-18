@@ -1,10 +1,11 @@
 import { Injectable, signal, inject } from '@angular/core';
 import type { PDFDocumentProxy, PDFPageProxy, PDFWorker } from 'pdfjs-dist';
-import { PDFJS_WORKER_URL } from '../tokens';
+import { PDFJS_WORKER_URL, PDFJS_WASM_URL } from '../tokens';
 
 @Injectable({ providedIn: 'root' })
 export class PdfRendererService {
   private readonly workerUrl = inject(PDFJS_WORKER_URL);
+  private readonly wasmUrl = inject(PDFJS_WASM_URL);
   private pdfDoc: PDFDocumentProxy | null = null;
   private pdfWorker: PDFWorker | null = null;
 
@@ -69,6 +70,7 @@ export class PdfRendererService {
     this.pdfDoc = await pdfjsLib.getDocument({
       data: buffer,
       worker: this.pdfWorker,
+      wasmUrl: this.wasmUrl,
     }).promise;
     this.pageCount.set(this.pdfDoc.numPages);
   }

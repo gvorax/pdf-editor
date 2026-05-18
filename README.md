@@ -19,7 +19,7 @@ npm install @gvorax/pdf-editor fabric pdfjs-dist pdf-lib
 
 ### Configure the PDF.js worker
 
-In your `angular.json`, add the worker file to the assets of your application:
+In your `angular.json`, add the worker and WASM files to the assets of your application:
 
 ```json
 "assets": [
@@ -29,9 +29,16 @@ In your `angular.json`, add the worker file to the assets of your application:
     "glob": "pdf.worker.mjs",
     "input": "node_modules/pdfjs-dist/build/",
     "output": "/"
+  },
+  {
+    "glob": "*.wasm",
+    "input": "node_modules/pdfjs-dist/wasm/",
+    "output": "/wasm/"
   }
 ]
 ```
+
+> **Note:** The WASM files (`jbig2.wasm`, `openjpeg.wasm`, etc.) are required by pdfjs-dist 5.x to decode scanned documents that use JBIG2/CCITTFax Group-4 image compression (common in Canon/Kyocera/Ricoh scanners). Without them, such pages render as blank white.
 
 ---
 
@@ -260,17 +267,18 @@ async handleSave(): Promise<void> {
 
 ---
 
-## Custom Worker URL
+## Custom Worker / WASM URL
 
-By default the library loads the PDF.js worker from `/pdf.worker.mjs`. If you serve it from a different path, override the `PDFJS_WORKER_URL` token in your `app.config.ts`:
+By default the library loads the PDF.js worker from `/pdf.worker.mjs` and WASM files from `/wasm/`. Override either via injection tokens in your `app.config.ts`:
 
 ```typescript
 import { ApplicationConfig } from '@angular/core';
-import { PDFJS_WORKER_URL } from '@gvorax/pdf-editor';
+import { PDFJS_WORKER_URL, PDFJS_WASM_URL } from '@gvorax/pdf-editor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     { provide: PDFJS_WORKER_URL, useValue: '/assets/pdf.worker.mjs' },
+    { provide: PDFJS_WASM_URL,   useValue: '/assets/wasm/' },
   ],
 };
 ```
