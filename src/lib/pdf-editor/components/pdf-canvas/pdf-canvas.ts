@@ -2,7 +2,7 @@ import {
   Component, ElementRef, ViewChild, Input, OnDestroy,
   AfterViewInit, OnChanges, SimpleChanges, effect, inject,
 } from '@angular/core';
-import * as fabric from 'fabric';
+import type * as FabricType from 'fabric';
 import { ToolService } from '../../services/tool.service';
 import { AnnotationService } from '../../services/annotation.service';
 import { HistoryService } from '../../services/history.service';
@@ -24,14 +24,14 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() width = 0;
   @Input() height = 0;
 
-  private fc: fabric.Canvas | null = null;
+  private fc: FabricType.Canvas | null = null;
+  // Fabric module cached after first dynamic import
+  private fab!: typeof FabricType;
   private drawingShape = false;
   private shapeOrigin: { x: number; y: number } | null = null;
-  private activeShape: fabric.Object | null = null;
+  private activeShape: FabricType.Object | null = null;
 
-  // State captured at mouse:down — pushed to undo stack when persist() is called
   private pendingUndo: string | null = null;
-  // Prevents pushing to history during undo/redo restoration
   private isUndoRedoing = false;
 
   private readonly toolService = inject(ToolService);
@@ -44,12 +44,15 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
     if (this.fc) this.applyTool(tool, opts);
   });
 
-  ngAfterViewInit(): void {
+  async ngAfterViewInit(): Promise<void> {
+    // Dynamic import — Vite will not include fabric in its pre-bundle pass
+    this.fab = await import('fabric');
+
     const el = this.canvasRef.nativeElement;
     el.width = this.width;
     el.height = this.height;
 
-    this.fc = new fabric.Canvas(el, {
+    this.fc = new this.fab.Canvas(el, {
       isDrawingMode: false,
       selection: false,
       enableRetinaScaling: false,
@@ -75,9 +78,7 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
     if (!oldW || oldW === newW) return;
 
     const ratio = newW / oldW;
-
     this.fc.setDimensions({ width: this.width, height: this.height });
-
     this.fc.getObjects().forEach(obj => {
       obj.set({
         left:   (obj.left   ?? 0) * ratio,
@@ -87,9 +88,7 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
       });
       obj.setCoords();
     });
-
     this.fc.renderAll();
-    // Zoom rescale is not an undoable action — save directly
     this.isUndoRedoing = true;
     this.persist();
     this.isUndoRedoing = false;
@@ -98,7 +97,6 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
   private loadSavedAnnotations(): void {
     const saved = this.annotationService.getPageJson(this.pageIndex);
     if (saved) {
-      // Initial load is not undoable
       this.isUndoRedoing = true;
       this.fc!.loadFromJSON(JSON.parse(saved)).then(() => {
         this.fc?.renderAll();
@@ -108,7 +106,7 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private applyTool(tool: ToolType, opts: ToolOptions): void {
-    if (!this.fc) return;
+    if (!this.fc || !this.fab) return;
     this.fc.isDrawingMode = false;
     this.fc.selection = tool === ToolType.Select;
 
@@ -118,50 +116,43 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
     switch (tool) {
       case ToolType.Pen:
         this.fc.isDrawingMode = true;
-        this.fc.freeDrawingBrush = new fabric.PencilBrush(this.fc);
+        this.fc.freeDrawingBrush = new this.fab.PencilBrush(this.fc);
         this.fc.freeDrawingBrush.color = opts.color;
         this.fc.freeDrawingBrush.width = opts.size;
         break;
-
       case ToolType.Highlighter:
         this.fc.isDrawingMode = true;
-        this.fc.freeDrawingBrush = new fabric.PencilBrush(this.fc);
+        this.fc.freeDrawingBrush = new this.fab.PencilBrush(this.fc);
         this.fc.freeDrawingBrush.color = this.toRgba(opts.color, 0.4);
         this.fc.freeDrawingBrush.width = Math.max(opts.size * 6, 20);
         break;
-
       case ToolType.Eraser:
         this.fc.isDrawingMode = true;
-        this.fc.freeDrawingBrush = new fabric.PencilBrush(this.fc);
+        this.fc.freeDrawingBrush = new this.fab.PencilBrush(this.fc);
         this.fc.freeDrawingBrush.color = 'rgba(255,255,255,1)';
         this.fc.freeDrawingBrush.width = opts.size * 5;
         break;
-
       case ToolType.Select:
         this.fc.renderAll();
         break;
     }
   }
 
-  // Capture canvas state before a user action begins.
-  // Called at the top of onMouseDown so it always runs before objects are mutated.
   private markDirty(): void {
     if (this.isUndoRedoing || !this.fc) return;
-    // Always overwrite: if a previous mouse:down produced no change the stale
-    // snapshot is replaced with the current (identical) state, which is correct.
     this.pendingUndo = JSON.stringify(this.fc.toJSON());
   }
 
-  private onMouseDown(e: fabric.TPointerEventInfo): void {
-    // Capture pre-action state for every drawing interaction
+  private onMouseDown(e: FabricType.TPointerEventInfo): void {
     this.markDirty();
+    if (!this.fab) return;
 
     const tool = this.toolService.activeTool();
     const opts = this.toolService.options();
     const pt = e.scenePoint as unknown as { x: number; y: number };
 
     if (tool === ToolType.Text) {
-      const tb = new fabric.Textbox('Text', {
+      const tb = new this.fab.Textbox('Text', {
         left: pt.x, top: pt.y,
         fontSize: opts.fontSize,
         fill: opts.color,
@@ -170,7 +161,7 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
       });
       this.fc!.add(tb);
       this.fc!.setActiveObject(tb);
-      (tb as fabric.IText).enterEditing?.();
+      (tb as FabricType.IText).enterEditing?.();
       return;
     }
 
@@ -183,14 +174,14 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     switch (tool) {
       case ToolType.Rectangle:
-        this.activeShape = new fabric.Rect({
+        this.activeShape = new this.fab.Rect({
           left: pt.x, top: pt.y, width: 0, height: 0,
           originX: 'center', originY: 'center',
           fill: 'transparent', stroke: color, strokeWidth: size, selectable: false,
         });
         break;
       case ToolType.Circle:
-        this.activeShape = new fabric.Ellipse({
+        this.activeShape = new this.fab.Ellipse({
           left: pt.x, top: pt.y, rx: 0, ry: 0,
           originX: 'center', originY: 'center',
           fill: 'transparent', stroke: color, strokeWidth: size, selectable: false,
@@ -198,7 +189,7 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
         break;
       case ToolType.Line:
       case ToolType.Arrow:
-        this.activeShape = new fabric.Line([pt.x, pt.y, pt.x, pt.y], {
+        this.activeShape = new this.fab.Line([pt.x, pt.y, pt.x, pt.y], {
           stroke: color, strokeWidth: size, selectable: false,
         });
         break;
@@ -206,7 +197,7 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
     if (this.activeShape) this.fc!.add(this.activeShape);
   }
 
-  private onMouseMove(e: fabric.TPointerEventInfo): void {
+  private onMouseMove(e: FabricType.TPointerEventInfo): void {
     if (!this.drawingShape || !this.activeShape || !this.shapeOrigin) return;
     const pt = e.scenePoint as unknown as { x: number; y: number };
     const o = this.shapeOrigin;
@@ -214,24 +205,20 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     switch (tool) {
       case ToolType.Rectangle:
-        (this.activeShape as fabric.Rect).set({
-          left: (o.x + pt.x) / 2,
-          top:  (o.y + pt.y) / 2,
-          width:  Math.abs(pt.x - o.x),
-          height: Math.abs(pt.y - o.y),
+        (this.activeShape as FabricType.Rect).set({
+          left: (o.x + pt.x) / 2, top: (o.y + pt.y) / 2,
+          width: Math.abs(pt.x - o.x), height: Math.abs(pt.y - o.y),
         });
         break;
       case ToolType.Circle:
-        (this.activeShape as fabric.Ellipse).set({
-          left: (o.x + pt.x) / 2,
-          top:  (o.y + pt.y) / 2,
-          rx: Math.abs(pt.x - o.x) / 2,
-          ry: Math.abs(pt.y - o.y) / 2,
+        (this.activeShape as FabricType.Ellipse).set({
+          left: (o.x + pt.x) / 2, top: (o.y + pt.y) / 2,
+          rx: Math.abs(pt.x - o.x) / 2, ry: Math.abs(pt.y - o.y) / 2,
         });
         break;
       case ToolType.Line:
       case ToolType.Arrow:
-        (this.activeShape as fabric.Line).set({ x2: pt.x, y2: pt.y });
+        (this.activeShape as FabricType.Line).set({ x2: pt.x, y2: pt.y });
         break;
     }
     this.fc!.renderAll();
@@ -240,9 +227,8 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
   private onMouseUp(): void {
     if (!this.drawingShape) return;
     this.drawingShape = false;
-
     if (this.activeShape && this.toolService.activeTool() === ToolType.Arrow) {
-      this.addArrowhead(this.activeShape as fabric.Line);
+      this.addArrowhead(this.activeShape as FabricType.Line);
     }
     if (this.activeShape) {
       this.fc!.renderAll();
@@ -252,12 +238,13 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.shapeOrigin = null;
   }
 
-  private addArrowhead(line: fabric.Line): void {
+  private addArrowhead(line: FabricType.Line): void {
+    if (!this.fab) return;
     const { size, color } = this.toolService.options();
     const x1 = (line as any).x1 ?? 0, y1 = (line as any).y1 ?? 0;
     const x2 = (line as any).x2 ?? 0, y2 = (line as any).y2 ?? 0;
     const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
-    this.fc!.add(new fabric.Triangle({
+    this.fc!.add(new this.fab.Triangle({
       left: x2, top: y2, originX: 'center', originY: 'center',
       width: size * 5, height: size * 5, fill: color, angle: angle + 90, selectable: false,
     }));
@@ -266,17 +253,12 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
   private persist(): void {
     if (!this.fc) return;
     const json = JSON.stringify(this.fc.toJSON());
-
     if (!this.isUndoRedoing && this.pendingUndo !== null) {
-      // First change after a mouse:down — commit the pre-action snapshot
       this.historyService.push(this.pageIndex, this.pendingUndo);
       this.pendingUndo = null;
     }
-
     this.annotationService.savePageJson(this.pageIndex, json);
   }
-
-  // ── Public API for undo/redo orchestration ────────────────────────────────
 
   getCurrentState(): string {
     return this.fc ? JSON.stringify(this.fc.toJSON()) : '{}';
@@ -298,7 +280,7 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
     return `rgba(${r},${g},${b},${alpha})`;
   }
 
-  getFabricCanvas(): fabric.Canvas | null { return this.fc; }
+  getFabricCanvas(): FabricType.Canvas | null { return this.fc; }
 
   ngOnDestroy(): void {
     this.toolEffect.destroy();

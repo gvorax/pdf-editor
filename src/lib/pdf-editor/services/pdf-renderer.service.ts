@@ -1,13 +1,12 @@
 import { Injectable, signal, inject } from '@angular/core';
-import * as pdfjsLib from 'pdfjs-dist';
-import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
+import type { PDFDocumentProxy, PDFPageProxy, PDFWorker } from 'pdfjs-dist';
 import { PDFJS_WORKER_URL } from '../tokens';
 
 @Injectable({ providedIn: 'root' })
 export class PdfRendererService {
   private readonly workerUrl = inject(PDFJS_WORKER_URL);
   private pdfDoc: PDFDocumentProxy | null = null;
-  private pdfWorker: InstanceType<typeof pdfjsLib.PDFWorker> | null = null;
+  private pdfWorker: PDFWorker | null = null;
 
   readonly pageCount = signal(0);
   readonly isLoading = signal(false);
@@ -53,7 +52,6 @@ export class PdfRendererService {
   }
 
   private async _load(buffer: ArrayBuffer): Promise<void> {
-    // Destroy previous document (pdfjs terminates the underlying worker on destroy)
     if (this.pdfDoc) {
       await this.pdfDoc.destroy();
       this.pdfDoc = null;
@@ -63,10 +61,8 @@ export class PdfRendererService {
       this.pdfWorker = null;
     }
 
-    // pdfjs-dist v5 ships ESM-only worker files.
-    // A classic Worker cannot execute ESM, so we must use { type: 'module' }.
-    // We pass the Worker to PDFWorker.create() and hand that to getDocument()
-    // so pdfjs owns the lifecycle rather than using the global workerSrc/workerPort.
+    // Dynamic import — prevents Vite from bundling pdfjs-dist during optimization
+    const pdfjsLib = await import('pdfjs-dist');
     const port = new Worker(this.workerUrl, { type: 'module' });
     this.pdfWorker = pdfjsLib.PDFWorker.create({ port });
 
@@ -82,8 +78,6 @@ export class PdfRendererService {
     return this.pdfDoc.getPage(pageNumber);
   }
 
-  // pdfjs-dist v5: RenderParameters.canvas (HTMLCanvasElement) is required;
-  // canvasContext is optional and derived internally from the canvas.
   async renderPage(
     pageNumber: number,
     canvas: HTMLCanvasElement,
@@ -91,10 +85,8 @@ export class PdfRendererService {
   ): Promise<{ width: number; height: number }> {
     const page = await this.getPage(pageNumber);
     const viewport = page.getViewport({ scale });
-
     canvas.width = viewport.width;
     canvas.height = viewport.height;
-
     await page.render({ canvas, viewport }).promise;
     return { width: viewport.width, height: viewport.height };
   }

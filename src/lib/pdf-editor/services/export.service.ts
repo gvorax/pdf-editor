@@ -1,43 +1,31 @@
 import { Injectable } from '@angular/core';
-import { PDFDocument } from 'pdf-lib';
-import { PdfRendererService } from './pdf-renderer.service';
 import type { Canvas as FabricCanvas } from 'fabric';
 
 @Injectable({ providedIn: 'root' })
 export class ExportService {
-  constructor(private renderer: PdfRendererService) {}
-
-  /**
-   * Merges each PDF page canvas with its Fabric annotation canvas and
-   * exports a downloadable PDF.
-   *
-   * @param pages  Array indexed by page order: { pdfCanvas, fabricCanvas }
-   */
   async exportPdf(
     pages: Array<{ pdfCanvas: HTMLCanvasElement; fabricCanvas: FabricCanvas | null }>,
     filename = 'annotated.pdf',
   ): Promise<void> {
+    // Dynamic import — prevents Vite from bundling pdf-lib during optimization
+    const { PDFDocument } = await import('pdf-lib');
     const pdfDoc = await PDFDocument.create();
 
     for (const { pdfCanvas, fabricCanvas } of pages) {
       const w = pdfCanvas.width;
       const h = pdfCanvas.height;
 
-      // Create a merged canvas: PDF background + annotation layer
       const merged = document.createElement('canvas');
       merged.width = w;
       merged.height = h;
       const ctx = merged.getContext('2d')!;
 
-      // 1. Draw the PDF page
       ctx.drawImage(pdfCanvas, 0, 0);
 
-      // 2. Draw annotations on top (if any exist)
       if (fabricCanvas && fabricCanvas.getObjects().length > 0) {
         await this._drawFabricOnContext(ctx, fabricCanvas, w, h);
       }
 
-      // 3. Encode as PNG and embed in new PDF page
       const pngBytes = await this._canvasToPng(merged);
       const pngImage = await pdfDoc.embedPng(pngBytes);
       const page = pdfDoc.addPage([w, h]);
@@ -55,15 +43,10 @@ export class ExportService {
     targetH: number,
   ): Promise<void> {
     return new Promise<void>(resolve => {
-      // toDataURL exports the Fabric canvas with all drawn objects
       const dataUrl = fc.toDataURL({ format: 'png', multiplier: 1, enableRetinaScaling: false });
       const img = new Image();
-      img.onload = () => {
-        // Draw scaled to target dimensions (handles retina discrepancies)
-        ctx.drawImage(img, 0, 0, targetW, targetH);
-        resolve();
-      };
-      img.onerror = () => resolve(); // never block export on annotation failure
+      img.onload = () => { ctx.drawImage(img, 0, 0, targetW, targetH); resolve(); };
+      img.onerror = () => resolve();
       img.src = dataUrl;
     });
   }
