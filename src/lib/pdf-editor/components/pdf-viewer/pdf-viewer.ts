@@ -40,13 +40,6 @@ interface PageInfo {
         </div>
       }
 
-      @if (rendererService.isLoading()) {
-        <div class="pdf-loading">
-          <div class="pdf-spinner"></div>
-          <span>PDF yuklanmoqda...</span>
-        </div>
-      }
-
       @if (rendererService.error()) {
         <div class="pdf-error">
           <span>Xato: {{ rendererService.error() }}</span>
