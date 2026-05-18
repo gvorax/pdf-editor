@@ -2,9 +2,6 @@ import * as i0 from '@angular/core';
 import { signal, computed, Injectable, inject, Pipe, EventEmitter, Output, Input, Component, effect, ViewChild, InjectionToken, ApplicationRef, ElementRef, ViewChildren, HostListener } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
-import * as fabric from 'fabric';
-import * as pdfjsLib from 'pdfjs-dist';
-import { PDFDocument } from 'pdf-lib';
 
 var ToolType;
 (function (ToolType) {
@@ -546,12 +543,12 @@ class PdfCanvasComponent {
     width = 0;
     height = 0;
     fc = null;
+    // Fabric module cached after first dynamic import
+    fab;
     drawingShape = false;
     shapeOrigin = null;
     activeShape = null;
-    // State captured at mouse:down — pushed to undo stack when persist() is called
     pendingUndo = null;
-    // Prevents pushing to history during undo/redo restoration
     isUndoRedoing = false;
     toolService = inject(ToolService);
     annotationService = inject(AnnotationService);
@@ -562,11 +559,13 @@ class PdfCanvasComponent {
         if (this.fc)
             this.applyTool(tool, opts);
     }, ...(ngDevMode ? [{ debugName: "toolEffect" }] : /* istanbul ignore next */ []));
-    ngAfterViewInit() {
+    async ngAfterViewInit() {
+        // Dynamic import — Vite will not include fabric in its pre-bundle pass
+        this.fab = await import('fabric');
         const el = this.canvasRef.nativeElement;
         el.width = this.width;
         el.height = this.height;
-        this.fc = new fabric.Canvas(el, {
+        this.fc = new this.fab.Canvas(el, {
             isDrawingMode: false,
             selection: false,
             enableRetinaScaling: false,
@@ -600,7 +599,6 @@ class PdfCanvasComponent {
             obj.setCoords();
         });
         this.fc.renderAll();
-        // Zoom rescale is not an undoable action — save directly
         this.isUndoRedoing = true;
         this.persist();
         this.isUndoRedoing = false;
@@ -608,7 +606,6 @@ class PdfCanvasComponent {
     loadSavedAnnotations() {
         const saved = this.annotationService.getPageJson(this.pageIndex);
         if (saved) {
-            // Initial load is not undoable
             this.isUndoRedoing = true;
             this.fc.loadFromJSON(JSON.parse(saved)).then(() => {
                 this.fc?.renderAll();
@@ -617,7 +614,7 @@ class PdfCanvasComponent {
         }
     }
     applyTool(tool, opts) {
-        if (!this.fc)
+        if (!this.fc || !this.fab)
             return;
         this.fc.isDrawingMode = false;
         this.fc.selection = tool === ToolType.Select;
@@ -626,19 +623,19 @@ class PdfCanvasComponent {
         switch (tool) {
             case ToolType.Pen:
                 this.fc.isDrawingMode = true;
-                this.fc.freeDrawingBrush = new fabric.PencilBrush(this.fc);
+                this.fc.freeDrawingBrush = new this.fab.PencilBrush(this.fc);
                 this.fc.freeDrawingBrush.color = opts.color;
                 this.fc.freeDrawingBrush.width = opts.size;
                 break;
             case ToolType.Highlighter:
                 this.fc.isDrawingMode = true;
-                this.fc.freeDrawingBrush = new fabric.PencilBrush(this.fc);
+                this.fc.freeDrawingBrush = new this.fab.PencilBrush(this.fc);
                 this.fc.freeDrawingBrush.color = this.toRgba(opts.color, 0.4);
                 this.fc.freeDrawingBrush.width = Math.max(opts.size * 6, 20);
                 break;
             case ToolType.Eraser:
                 this.fc.isDrawingMode = true;
-                this.fc.freeDrawingBrush = new fabric.PencilBrush(this.fc);
+                this.fc.freeDrawingBrush = new this.fab.PencilBrush(this.fc);
                 this.fc.freeDrawingBrush.color = 'rgba(255,255,255,1)';
                 this.fc.freeDrawingBrush.width = opts.size * 5;
                 break;
@@ -647,23 +644,20 @@ class PdfCanvasComponent {
                 break;
         }
     }
-    // Capture canvas state before a user action begins.
-    // Called at the top of onMouseDown so it always runs before objects are mutated.
     markDirty() {
         if (this.isUndoRedoing || !this.fc)
             return;
-        // Always overwrite: if a previous mouse:down produced no change the stale
-        // snapshot is replaced with the current (identical) state, which is correct.
         this.pendingUndo = JSON.stringify(this.fc.toJSON());
     }
     onMouseDown(e) {
-        // Capture pre-action state for every drawing interaction
         this.markDirty();
+        if (!this.fab)
+            return;
         const tool = this.toolService.activeTool();
         const opts = this.toolService.options();
         const pt = e.scenePoint;
         if (tool === ToolType.Text) {
-            const tb = new fabric.Textbox('Text', {
+            const tb = new this.fab.Textbox('Text', {
                 left: pt.x, top: pt.y,
                 fontSize: opts.fontSize,
                 fill: opts.color,
@@ -683,14 +677,14 @@ class PdfCanvasComponent {
         const { color, size } = opts;
         switch (tool) {
             case ToolType.Rectangle:
-                this.activeShape = new fabric.Rect({
+                this.activeShape = new this.fab.Rect({
                     left: pt.x, top: pt.y, width: 0, height: 0,
                     originX: 'center', originY: 'center',
                     fill: 'transparent', stroke: color, strokeWidth: size, selectable: false,
                 });
                 break;
             case ToolType.Circle:
-                this.activeShape = new fabric.Ellipse({
+                this.activeShape = new this.fab.Ellipse({
                     left: pt.x, top: pt.y, rx: 0, ry: 0,
                     originX: 'center', originY: 'center',
                     fill: 'transparent', stroke: color, strokeWidth: size, selectable: false,
@@ -698,7 +692,7 @@ class PdfCanvasComponent {
                 break;
             case ToolType.Line:
             case ToolType.Arrow:
-                this.activeShape = new fabric.Line([pt.x, pt.y, pt.x, pt.y], {
+                this.activeShape = new this.fab.Line([pt.x, pt.y, pt.x, pt.y], {
                     stroke: color, strokeWidth: size, selectable: false,
                 });
                 break;
@@ -715,18 +709,14 @@ class PdfCanvasComponent {
         switch (tool) {
             case ToolType.Rectangle:
                 this.activeShape.set({
-                    left: (o.x + pt.x) / 2,
-                    top: (o.y + pt.y) / 2,
-                    width: Math.abs(pt.x - o.x),
-                    height: Math.abs(pt.y - o.y),
+                    left: (o.x + pt.x) / 2, top: (o.y + pt.y) / 2,
+                    width: Math.abs(pt.x - o.x), height: Math.abs(pt.y - o.y),
                 });
                 break;
             case ToolType.Circle:
                 this.activeShape.set({
-                    left: (o.x + pt.x) / 2,
-                    top: (o.y + pt.y) / 2,
-                    rx: Math.abs(pt.x - o.x) / 2,
-                    ry: Math.abs(pt.y - o.y) / 2,
+                    left: (o.x + pt.x) / 2, top: (o.y + pt.y) / 2,
+                    rx: Math.abs(pt.x - o.x) / 2, ry: Math.abs(pt.y - o.y) / 2,
                 });
                 break;
             case ToolType.Line:
@@ -751,11 +741,13 @@ class PdfCanvasComponent {
         this.shapeOrigin = null;
     }
     addArrowhead(line) {
+        if (!this.fab)
+            return;
         const { size, color } = this.toolService.options();
         const x1 = line.x1 ?? 0, y1 = line.y1 ?? 0;
         const x2 = line.x2 ?? 0, y2 = line.y2 ?? 0;
         const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
-        this.fc.add(new fabric.Triangle({
+        this.fc.add(new this.fab.Triangle({
             left: x2, top: y2, originX: 'center', originY: 'center',
             width: size * 5, height: size * 5, fill: color, angle: angle + 90, selectable: false,
         }));
@@ -765,13 +757,11 @@ class PdfCanvasComponent {
             return;
         const json = JSON.stringify(this.fc.toJSON());
         if (!this.isUndoRedoing && this.pendingUndo !== null) {
-            // First change after a mouse:down — commit the pre-action snapshot
             this.historyService.push(this.pageIndex, this.pendingUndo);
             this.pendingUndo = null;
         }
         this.annotationService.savePageJson(this.pageIndex, json);
     }
-    // ── Public API for undo/redo orchestration ────────────────────────────────
     getCurrentState() {
         return this.fc ? JSON.stringify(this.fc.toJSON()) : '{}';
     }
@@ -868,7 +858,6 @@ class PdfRendererService {
         }
     }
     async _load(buffer) {
-        // Destroy previous document (pdfjs terminates the underlying worker on destroy)
         if (this.pdfDoc) {
             await this.pdfDoc.destroy();
             this.pdfDoc = null;
@@ -877,10 +866,8 @@ class PdfRendererService {
             this.pdfWorker.destroy();
             this.pdfWorker = null;
         }
-        // pdfjs-dist v5 ships ESM-only worker files.
-        // A classic Worker cannot execute ESM, so we must use { type: 'module' }.
-        // We pass the Worker to PDFWorker.create() and hand that to getDocument()
-        // so pdfjs owns the lifecycle rather than using the global workerSrc/workerPort.
+        // Dynamic import — prevents Vite from bundling pdfjs-dist during optimization
+        const pdfjsLib = await import('pdfjs-dist');
         const port = new Worker(this.workerUrl, { type: 'module' });
         this.pdfWorker = pdfjsLib.PDFWorker.create({ port });
         this.pdfDoc = await pdfjsLib.getDocument({
@@ -894,8 +881,6 @@ class PdfRendererService {
             throw new Error('No PDF loaded');
         return this.pdfDoc.getPage(pageNumber);
     }
-    // pdfjs-dist v5: RenderParameters.canvas (HTMLCanvasElement) is required;
-    // canvasContext is optional and derived internally from the canvas.
     async renderPage(pageNumber, canvas, scale = 1) {
         const page = await this.getPage(pageNumber);
         const viewport = page.getViewport({ scale });
@@ -1103,33 +1088,21 @@ i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "21.2.13", ngImpo
             }] } });
 
 class ExportService {
-    renderer;
-    constructor(renderer) {
-        this.renderer = renderer;
-    }
-    /**
-     * Merges each PDF page canvas with its Fabric annotation canvas and
-     * exports a downloadable PDF.
-     *
-     * @param pages  Array indexed by page order: { pdfCanvas, fabricCanvas }
-     */
     async exportPdf(pages, filename = 'annotated.pdf') {
+        // Dynamic import — prevents Vite from bundling pdf-lib during optimization
+        const { PDFDocument } = await import('pdf-lib');
         const pdfDoc = await PDFDocument.create();
         for (const { pdfCanvas, fabricCanvas } of pages) {
             const w = pdfCanvas.width;
             const h = pdfCanvas.height;
-            // Create a merged canvas: PDF background + annotation layer
             const merged = document.createElement('canvas');
             merged.width = w;
             merged.height = h;
             const ctx = merged.getContext('2d');
-            // 1. Draw the PDF page
             ctx.drawImage(pdfCanvas, 0, 0);
-            // 2. Draw annotations on top (if any exist)
             if (fabricCanvas && fabricCanvas.getObjects().length > 0) {
                 await this._drawFabricOnContext(ctx, fabricCanvas, w, h);
             }
-            // 3. Encode as PNG and embed in new PDF page
             const pngBytes = await this._canvasToPng(merged);
             const pngImage = await pdfDoc.embedPng(pngBytes);
             const page = pdfDoc.addPage([w, h]);
@@ -1140,15 +1113,10 @@ class ExportService {
     }
     _drawFabricOnContext(ctx, fc, targetW, targetH) {
         return new Promise(resolve => {
-            // toDataURL exports the Fabric canvas with all drawn objects
             const dataUrl = fc.toDataURL({ format: 'png', multiplier: 1, enableRetinaScaling: false });
             const img = new Image();
-            img.onload = () => {
-                // Draw scaled to target dimensions (handles retina discrepancies)
-                ctx.drawImage(img, 0, 0, targetW, targetH);
-                resolve();
-            };
-            img.onerror = () => resolve(); // never block export on annotation failure
+            img.onload = () => { ctx.drawImage(img, 0, 0, targetW, targetH); resolve(); };
+            img.onerror = () => resolve();
             img.src = dataUrl;
         });
     }
@@ -1168,13 +1136,13 @@ class ExportService {
         a.click();
         URL.revokeObjectURL(url);
     }
-    static ɵfac = i0.ɵɵngDeclareFactory({ minVersion: "12.0.0", version: "21.2.13", ngImport: i0, type: ExportService, deps: [{ token: PdfRendererService }], target: i0.ɵɵFactoryTarget.Injectable });
+    static ɵfac = i0.ɵɵngDeclareFactory({ minVersion: "12.0.0", version: "21.2.13", ngImport: i0, type: ExportService, deps: [], target: i0.ɵɵFactoryTarget.Injectable });
     static ɵprov = i0.ɵɵngDeclareInjectable({ minVersion: "12.0.0", version: "21.2.13", ngImport: i0, type: ExportService, providedIn: 'root' });
 }
 i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "21.2.13", ngImport: i0, type: ExportService, decorators: [{
             type: Injectable,
             args: [{ providedIn: 'root' }]
-        }], ctorParameters: () => [{ type: PdfRendererService }] });
+        }] });
 
 class PdfEditorComponent {
     config = {};

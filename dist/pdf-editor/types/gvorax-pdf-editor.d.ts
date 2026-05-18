@@ -1,6 +1,6 @@
 import * as _angular_core from '@angular/core';
 import { AfterViewInit, OnChanges, OnDestroy, ElementRef, SimpleChanges, EventEmitter, QueryList, OnInit, Signal, InjectionToken } from '@angular/core';
-import * as fabric from 'fabric';
+import * as FabricType from 'fabric';
 import { Canvas } from 'fabric';
 import { PDFPageProxy, PDFDocumentProxy } from 'pdfjs-dist';
 
@@ -10,6 +10,7 @@ declare class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy 
     width: number;
     height: number;
     private fc;
+    private fab;
     private drawingShape;
     private shapeOrigin;
     private activeShape;
@@ -19,7 +20,7 @@ declare class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy 
     private readonly annotationService;
     private readonly historyService;
     private readonly toolEffect;
-    ngAfterViewInit(): void;
+    ngAfterViewInit(): Promise<void>;
     ngOnChanges(changes: SimpleChanges): void;
     private loadSavedAnnotations;
     private applyTool;
@@ -32,7 +33,7 @@ declare class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy 
     getCurrentState(): string;
     restoreState(state: string): Promise<void>;
     private toRgba;
-    getFabricCanvas(): fabric.Canvas | null;
+    getFabricCanvas(): FabricType.Canvas | null;
     ngOnDestroy(): void;
     static ɵfac: _angular_core.ɵɵFactoryDeclaration<PdfCanvasComponent, never>;
     static ɵcmp: _angular_core.ɵɵComponentDeclaration<PdfCanvasComponent, "pdf-canvas", never, { "pageIndex": { "alias": "pageIndex"; "required": true; }; "width": { "alias": "width"; "required": false; }; "height": { "alias": "height"; "required": false; }; }, {}, never, never, true, never>;
@@ -297,14 +298,6 @@ declare class AnnotationService {
 }
 
 declare class ExportService {
-    private renderer;
-    constructor(renderer: PdfRendererService);
-    /**
-     * Merges each PDF page canvas with its Fabric annotation canvas and
-     * exports a downloadable PDF.
-     *
-     * @param pages  Array indexed by page order: { pdfCanvas, fabricCanvas }
-     */
     exportPdf(pages: Array<{
         pdfCanvas: HTMLCanvasElement;
         fabricCanvas: Canvas | null;
