@@ -43,6 +43,7 @@ declare class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy 
 
 declare class PdfRendererService {
     private readonly workerUrl;
+    private readonly wasmUrl;
     private pdfDoc;
     private pdfWorker;
     readonly pageCount: _angular_core.WritableSignal<number>;
@@ -313,7 +314,8 @@ declare class ExportService {
 }
 
 declare const PDFJS_WORKER_URL: InjectionToken<string>;
+declare const PDFJS_WASM_URL: InjectionToken<string>;
 
-export { AnnotationService, DEFAULT_COLORS, DEFAULT_CONFIG, DEFAULT_TOOL_OPTIONS, ExportService, HistoryService, PDFJS_WORKER_URL, PdfCanvasComponent, PdfEditorComponent, PdfRendererService, PdfToolbarComponent, PdfViewerComponent, ToolService, ToolType };
+export { AnnotationService, DEFAULT_COLORS, DEFAULT_CONFIG, DEFAULT_TOOL_OPTIONS, ExportService, HistoryService, PDFJS_WASM_URL, PDFJS_WORKER_URL, PdfCanvasComponent, PdfEditorComponent, PdfRendererService, PdfToolbarComponent, PdfViewerComponent, ToolService, ToolType };
 export type { AnnotationSession, EditorConfig, EditorTheme, PageAnnotations, TextAnnotation, ToolOptions, ToolbarConfig, ToolbarPosition, ZoomConfig };
 //# sourceMappingURL=gvorax-pdf-editor.d.ts.map

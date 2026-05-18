@@ -860,9 +860,16 @@ const PDFJS_WORKER_URL = new InjectionToken('PDFJS_WORKER_URL', {
     providedIn: 'root',
     factory: () => '/pdf.worker.mjs',
 });
+// Directory URL containing pdfjs-dist WASM files (jbig2.wasm, openjpeg.wasm, etc.)
+// Required for pdfjs-dist 5.x to decode JBIG2/CCITTFax Group-4 images.
+const PDFJS_WASM_URL = new InjectionToken('PDFJS_WASM_URL', {
+    providedIn: 'root',
+    factory: () => '/wasm/',
+});
 
 class PdfRendererService {
     workerUrl = inject(PDFJS_WORKER_URL);
+    wasmUrl = inject(PDFJS_WASM_URL);
     pdfDoc = null;
     pdfWorker = null;
     pageCount = signal(0, ...(ngDevMode ? [{ debugName: "pageCount" }] : /* istanbul ignore next */ []));
@@ -926,6 +933,7 @@ class PdfRendererService {
         this.pdfDoc = await pdfjsLib.getDocument({
             data: buffer,
             worker: this.pdfWorker,
+            wasmUrl: this.wasmUrl,
         }).promise;
         this.pageCount.set(this.pdfDoc.numPages);
     }
@@ -1631,5 +1639,5 @@ i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "21.2.13", ngImpo
  * Generated bundle index. Do not edit.
  */
 
-export { AnnotationService, DEFAULT_COLORS, DEFAULT_CONFIG, DEFAULT_TOOL_OPTIONS, ExportService, HistoryService, PDFJS_WORKER_URL, PdfCanvasComponent, PdfEditorComponent, PdfRendererService, PdfToolbarComponent, PdfViewerComponent, ToolService, ToolType };
+export { AnnotationService, DEFAULT_COLORS, DEFAULT_CONFIG, DEFAULT_TOOL_OPTIONS, ExportService, HistoryService, PDFJS_WASM_URL, PDFJS_WORKER_URL, PdfCanvasComponent, PdfEditorComponent, PdfRendererService, PdfToolbarComponent, PdfViewerComponent, ToolService, ToolType };
 //# sourceMappingURL=gvorax-pdf-editor.mjs.map
