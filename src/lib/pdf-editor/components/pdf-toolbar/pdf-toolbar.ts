@@ -242,7 +242,7 @@ const ALL_TOOLS: ToolDef[] = [
     .pfe-icon svg { width: 100%; height: 100%; }
 
     /* Color dots */
-    .pfe-toolbar__colors { flex-wrap: wrap; max-width: 200px; }
+    .pfe-toolbar__colors { flex-wrap: nowrap; }
 
     .pfe-color-dot {
       width: 22px; height: 22px;

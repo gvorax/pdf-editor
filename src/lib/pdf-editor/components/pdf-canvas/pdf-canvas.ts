@@ -203,6 +203,7 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
     if (tool === ToolType.Text) {
       const tb = new this.fab.Textbox('Text', {
         left: pt.x, top: pt.y,
+        originX: 'left', originY: 'top',
         fontSize: opts.fontSize,
         fill: opts.color,
         fontFamily: opts.fontFamily,
@@ -210,7 +211,9 @@ export class PdfCanvasComponent implements AfterViewInit, OnChanges, OnDestroy {
       });
       this.fc!.add(tb);
       this.fc!.setActiveObject(tb);
-      (tb as FabricType.IText).enterEditing?.();
+      const itext = tb as FabricType.IText;
+      itext.enterEditing?.();
+      itext.selectAll?.();
       return;
     }
 
