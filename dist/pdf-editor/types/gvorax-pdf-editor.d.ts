@@ -320,4 +320,4 @@ declare const PDFJS_WORKER_URL: InjectionToken<string>;
 
 export { AnnotationService, DEFAULT_COLORS, DEFAULT_CONFIG, DEFAULT_TOOL_OPTIONS, ExportService, HistoryService, PDFJS_WORKER_URL, PdfCanvasComponent, PdfEditorComponent, PdfRendererService, PdfToolbarComponent, PdfViewerComponent, ToolService, ToolType };
 export type { AnnotationSession, EditorConfig, EditorTheme, PageAnnotations, TextAnnotation, ToolOptions, ToolbarConfig, ToolbarPosition, ZoomConfig };
-//# sourceMappingURL=pdf-editor.d.ts.map
+//# sourceMappingURL=gvorax-pdf-editor.d.ts.map
