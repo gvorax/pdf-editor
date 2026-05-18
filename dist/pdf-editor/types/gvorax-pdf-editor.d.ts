@@ -141,6 +141,7 @@ interface ToolbarConfig {
     position?: ToolbarPosition;
     tools?: ToolType[];
     show?: boolean;
+    showSave?: boolean;
 }
 interface ZoomConfig {
     min?: number;
@@ -186,7 +187,7 @@ declare class PdfEditorComponent implements OnInit, OnChanges, OnDestroy {
     onUploadClick(): void;
     onFileSelected(e: Event): Promise<void>;
     onDrop(e: DragEvent): Promise<void>;
-    onSave(): Promise<void>;
+    save(): Promise<void>;
     onZoomIn(): void;
     onZoomOut(): void;
     onZoomReset(): void;

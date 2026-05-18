@@ -29,7 +29,7 @@ const DEFAULT_COLORS = [
 
 const DEFAULT_CONFIG = {
     theme: 'light',
-    toolbar: { position: 'top', tools: Object.values(ToolType), show: true },
+    toolbar: { position: 'top', tools: Object.values(ToolType), show: true, showSave: true },
     defaultTool: ToolType.Pen,
     defaultColor: '#e53935',
     colors: ['#e53935', '#fb8c00', '#fdd835', '#43a047', '#1e88e5', '#8e24aa', '#000000', '#ffffff'],
@@ -98,7 +98,7 @@ const ICONS = {
     arrow: svg(`<path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`),
     line: svg(`<path d="M4 20L20 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`),
     eraser: svg(`<path d="M20 20H7L3 16l11-11 6 6-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`),
-    palette: svg(`<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="9" cy="10" r="1.2" fill="currentColor"/><circle cx="15" cy="10" r="1.2" fill="currentColor"/><circle cx="12" cy="15" r="1.2" fill="currentColor"/>`),
+    palette: svg(`<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5S12.5 5.5 12 3c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`),
     zoomIn: svg(`<circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M11 8v6M8 11h6M20 20l-3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`),
     zoomOut: svg(`<circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 11h6M20 20l-3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`),
     undo: svg(`<path d="M3 10h11a5 5 0 0 1 0 10H9M3 10l4-4M3 10l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`),
@@ -268,16 +268,14 @@ class PdfToolbarComponent {
       <div class="pfe-divider"></div>
 
       <!-- Actions -->
-      <div class="pfe-toolbar__group">
-        <button class="pfe-action-btn pfe-action-btn--primary" title="PDF saqlash" (click)="save.emit()">
-          <span class="pfe-icon" [innerHTML]="icons.save | safeHtml"></span>
-          <span class="pfe-action-label">Saqlash</span>
-        </button>
-        <button class="pfe-action-btn" title="PDF yuklash" (click)="upload.emit()">
-          <span class="pfe-icon" [innerHTML]="icons.upload | safeHtml"></span>
-          <span class="pfe-action-label">Yuklash</span>
-        </button>
-      </div>
+      @if (config?.showSave !== false) {
+        <div class="pfe-toolbar__group">
+          <button class="pfe-action-btn pfe-action-btn--primary" title="PDF saqlash" (click)="save.emit()">
+            <span class="pfe-icon" [innerHTML]="icons.save | safeHtml"></span>
+            <span class="pfe-action-label">Saqlash</span>
+          </button>
+        </div>
+      }
     </div>
   `, isInline: true, styles: [".pfe-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:4px;padding:8px 14px;background:var(--pfe-toolbar-bg, #fff);border-bottom:1px solid var(--pfe-border, #e0e0e0);box-shadow:var(--pfe-toolbar-shadow, 0 2px 8px rgba(0,0,0,.06));flex-shrink:0;z-index:20;-webkit-user-select:none;user-select:none}.pfe-toolbar--bottom{border-bottom:none;border-top:1px solid var(--pfe-border, #e0e0e0)}.pfe-toolbar--left,.pfe-toolbar--right{flex-direction:column;align-items:stretch;padding:12px 8px;border-bottom:none;height:100%;overflow-y:auto;width:60px}.pfe-toolbar--left{border-right:1px solid var(--pfe-border, #e0e0e0)}.pfe-toolbar--right{border-left:1px solid var(--pfe-border, #e0e0e0)}.pfe-toolbar__group{display:flex;align-items:center;gap:4px;flex-wrap:wrap}.pfe-toolbar--left .pfe-toolbar__group,.pfe-toolbar--right .pfe-toolbar__group{flex-direction:column;align-items:center}.pfe-divider{width:1px;height:28px;background:var(--pfe-border, #e0e0e0);margin:0 6px;flex-shrink:0}.pfe-toolbar--left .pfe-divider,.pfe-toolbar--right .pfe-divider{width:100%;height:1px;margin:6px 0}.pfe-tool-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border:none;border-radius:8px;background:transparent;cursor:pointer;color:var(--pfe-icon, #444);transition:background .15s,color .15s,transform .1s;padding:0;flex-shrink:0}.pfe-tool-btn:hover{background:var(--pfe-hover, #f0f4ff);color:var(--pfe-accent, #1e88e5)}.pfe-tool-btn--active{background:var(--pfe-accent, #1e88e5)!important;color:#fff!important}.pfe-tool-btn:active{transform:scale(.92)}.pfe-icon{display:flex;width:20px;height:20px;pointer-events:none}.pfe-icon svg{width:100%;height:100%}.pfe-toolbar__colors{flex-wrap:wrap;max-width:200px}.pfe-color-dot{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;flex-shrink:0;transition:transform .15s,border-color .15s}.pfe-color-dot:hover{transform:scale(1.2)}.pfe-color-dot--active{border-color:var(--pfe-accent, #1e88e5);box-shadow:0 0 0 2px #fff,0 0 0 4px var(--pfe-accent, #1e88e5)}.pfe-color-pick{position:relative;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;cursor:pointer;color:var(--pfe-icon, #444);transition:background .15s}.pfe-color-pick:hover{background:var(--pfe-hover, #f0f4ff)}.pfe-color-pick input[type=color]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}.pfe-toolbar__size{gap:8px}.pfe-label{font-size:11px;color:var(--pfe-muted, #888);white-space:nowrap}.pfe-size-val{font-size:12px;font-weight:600;min-width:18px;text-align:center;color:var(--pfe-text, #222)}.pfe-zoom-val{font-size:12px;font-weight:600;min-width:44px;text-align:center;color:var(--pfe-text, #222)}.pfe-slider{-webkit-appearance:none;appearance:none;height:4px;width:80px;border-radius:2px;background:var(--pfe-border, #e0e0e0);outline:none;cursor:pointer}.pfe-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:var(--pfe-accent, #1e88e5);cursor:pointer;transition:transform .15s}.pfe-slider::-webkit-slider-thumb:hover{transform:scale(1.2)}.pfe-action-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--pfe-border, #e0e0e0);border-radius:8px;background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--pfe-text, #333);transition:background .15s,border-color .15s,transform .1s;white-space:nowrap}.pfe-action-btn:hover{background:var(--pfe-hover, #f0f4ff);border-color:var(--pfe-accent, #1e88e5)}.pfe-action-btn:active{transform:scale(.97)}.pfe-action-btn--primary{background:var(--pfe-accent, #1e88e5);border-color:var(--pfe-accent, #1e88e5);color:#fff}.pfe-action-btn--primary:hover{background:var(--pfe-accent-hover, #1565c0)}.pfe-action-btn--danger{color:#e53935;border-color:#e53935}.pfe-action-btn--danger:hover{background:#ffebee;border-color:#e53935}.pfe-action-label{white-space:nowrap}.pfe-toolbar__pages{gap:2px}.pfe-page-indicator{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:500;color:var(--pfe-text, #222)}.pfe-page-input{width:36px;text-align:center;border:1px solid var(--pfe-border, #e0e0e0);border-radius:6px;padding:2px 4px;font-size:12px;font-weight:600;background:transparent;color:var(--pfe-text, #222);-moz-appearance:textfield}.pfe-page-input::-webkit-inner-spin-button,.pfe-page-input::-webkit-outer-spin-button{-webkit-appearance:none}.pfe-page-input:focus{outline:none;border-color:var(--pfe-accent, #1e88e5)}.pfe-page-sep{color:var(--pfe-muted, #888);white-space:nowrap}.pfe-tool-btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}\n"], dependencies: [{ kind: "pipe", type: DecimalPipe, name: "number" }, { kind: "pipe", type: SafeHtmlPipe, name: "safeHtml" }] });
 }
@@ -399,16 +397,14 @@ i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "21.2.13", ngImpo
       <div class="pfe-divider"></div>
 
       <!-- Actions -->
-      <div class="pfe-toolbar__group">
-        <button class="pfe-action-btn pfe-action-btn--primary" title="PDF saqlash" (click)="save.emit()">
-          <span class="pfe-icon" [innerHTML]="icons.save | safeHtml"></span>
-          <span class="pfe-action-label">Saqlash</span>
-        </button>
-        <button class="pfe-action-btn" title="PDF yuklash" (click)="upload.emit()">
-          <span class="pfe-icon" [innerHTML]="icons.upload | safeHtml"></span>
-          <span class="pfe-action-label">Yuklash</span>
-        </button>
-      </div>
+      @if (config?.showSave !== false) {
+        <div class="pfe-toolbar__group">
+          <button class="pfe-action-btn pfe-action-btn--primary" title="PDF saqlash" (click)="save.emit()">
+            <span class="pfe-icon" [innerHTML]="icons.save | safeHtml"></span>
+            <span class="pfe-action-label">Saqlash</span>
+          </button>
+        </div>
+      }
     </div>
   `, styles: [".pfe-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:4px;padding:8px 14px;background:var(--pfe-toolbar-bg, #fff);border-bottom:1px solid var(--pfe-border, #e0e0e0);box-shadow:var(--pfe-toolbar-shadow, 0 2px 8px rgba(0,0,0,.06));flex-shrink:0;z-index:20;-webkit-user-select:none;user-select:none}.pfe-toolbar--bottom{border-bottom:none;border-top:1px solid var(--pfe-border, #e0e0e0)}.pfe-toolbar--left,.pfe-toolbar--right{flex-direction:column;align-items:stretch;padding:12px 8px;border-bottom:none;height:100%;overflow-y:auto;width:60px}.pfe-toolbar--left{border-right:1px solid var(--pfe-border, #e0e0e0)}.pfe-toolbar--right{border-left:1px solid var(--pfe-border, #e0e0e0)}.pfe-toolbar__group{display:flex;align-items:center;gap:4px;flex-wrap:wrap}.pfe-toolbar--left .pfe-toolbar__group,.pfe-toolbar--right .pfe-toolbar__group{flex-direction:column;align-items:center}.pfe-divider{width:1px;height:28px;background:var(--pfe-border, #e0e0e0);margin:0 6px;flex-shrink:0}.pfe-toolbar--left .pfe-divider,.pfe-toolbar--right .pfe-divider{width:100%;height:1px;margin:6px 0}.pfe-tool-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border:none;border-radius:8px;background:transparent;cursor:pointer;color:var(--pfe-icon, #444);transition:background .15s,color .15s,transform .1s;padding:0;flex-shrink:0}.pfe-tool-btn:hover{background:var(--pfe-hover, #f0f4ff);color:var(--pfe-accent, #1e88e5)}.pfe-tool-btn--active{background:var(--pfe-accent, #1e88e5)!important;color:#fff!important}.pfe-tool-btn:active{transform:scale(.92)}.pfe-icon{display:flex;width:20px;height:20px;pointer-events:none}.pfe-icon svg{width:100%;height:100%}.pfe-toolbar__colors{flex-wrap:wrap;max-width:200px}.pfe-color-dot{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;flex-shrink:0;transition:transform .15s,border-color .15s}.pfe-color-dot:hover{transform:scale(1.2)}.pfe-color-dot--active{border-color:var(--pfe-accent, #1e88e5);box-shadow:0 0 0 2px #fff,0 0 0 4px var(--pfe-accent, #1e88e5)}.pfe-color-pick{position:relative;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;cursor:pointer;color:var(--pfe-icon, #444);transition:background .15s}.pfe-color-pick:hover{background:var(--pfe-hover, #f0f4ff)}.pfe-color-pick input[type=color]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}.pfe-toolbar__size{gap:8px}.pfe-label{font-size:11px;color:var(--pfe-muted, #888);white-space:nowrap}.pfe-size-val{font-size:12px;font-weight:600;min-width:18px;text-align:center;color:var(--pfe-text, #222)}.pfe-zoom-val{font-size:12px;font-weight:600;min-width:44px;text-align:center;color:var(--pfe-text, #222)}.pfe-slider{-webkit-appearance:none;appearance:none;height:4px;width:80px;border-radius:2px;background:var(--pfe-border, #e0e0e0);outline:none;cursor:pointer}.pfe-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:var(--pfe-accent, #1e88e5);cursor:pointer;transition:transform .15s}.pfe-slider::-webkit-slider-thumb:hover{transform:scale(1.2)}.pfe-action-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--pfe-border, #e0e0e0);border-radius:8px;background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--pfe-text, #333);transition:background .15s,border-color .15s,transform .1s;white-space:nowrap}.pfe-action-btn:hover{background:var(--pfe-hover, #f0f4ff);border-color:var(--pfe-accent, #1e88e5)}.pfe-action-btn:active{transform:scale(.97)}.pfe-action-btn--primary{background:var(--pfe-accent, #1e88e5);border-color:var(--pfe-accent, #1e88e5);color:#fff}.pfe-action-btn--primary:hover{background:var(--pfe-accent-hover, #1565c0)}.pfe-action-btn--danger{color:#e53935;border-color:#e53935}.pfe-action-btn--danger:hover{background:#ffebee;border-color:#e53935}.pfe-action-label{white-space:nowrap}.pfe-toolbar__pages{gap:2px}.pfe-page-indicator{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:500;color:var(--pfe-text, #222)}.pfe-page-input{width:36px;text-align:center;border:1px solid var(--pfe-border, #e0e0e0);border-radius:6px;padding:2px 4px;font-size:12px;font-weight:600;background:transparent;color:var(--pfe-text, #222);-moz-appearance:textfield}.pfe-page-input::-webkit-inner-spin-button,.pfe-page-input::-webkit-outer-spin-button{-webkit-appearance:none}.pfe-page-input:focus{outline:none;border-color:var(--pfe-accent, #1e88e5)}.pfe-page-sep{color:var(--pfe-muted, #888);white-space:nowrap}.pfe-tool-btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}\n"] }]
         }], propDecorators: { config: [{
@@ -1309,7 +1305,7 @@ class PdfEditorComponent {
         if (file?.type === 'application/pdf')
             await this.loadSrc(file);
     }
-    async onSave() {
+    async save() {
         if (!this.viewerRef)
             return;
         const count = this.rendererService.pageCount();
@@ -1366,7 +1362,7 @@ class PdfEditorComponent {
                 [colors]="paletteColors"
                 [currentPage]="currentPage"
                 [pageCount]="rendererService.pageCount"
-                (save)="onSave()"
+                (save)="save()"
                 (upload)="onUploadClick()"
                 (zoomIn)="onZoomIn()"
                 (zoomOut)="onZoomOut()"
@@ -1390,7 +1386,7 @@ class PdfEditorComponent {
                 [colors]="paletteColors"
                 [currentPage]="currentPage"
                 [pageCount]="rendererService.pageCount"
-                (save)="onSave()"
+                (save)="save()"
                 (upload)="onUploadClick()"
                 (zoomIn)="onZoomIn()"
                 (zoomOut)="onZoomOut()"
@@ -1414,7 +1410,7 @@ class PdfEditorComponent {
                 [colors]="paletteColors"
                 [currentPage]="currentPage"
                 [pageCount]="rendererService.pageCount"
-                (save)="onSave()"
+                (save)="save()"
                 (upload)="onUploadClick()"
                 (zoomIn)="onZoomIn()"
                 (zoomOut)="onZoomOut()"
@@ -1438,7 +1434,7 @@ class PdfEditorComponent {
                 [colors]="paletteColors"
                 [currentPage]="currentPage"
                 [pageCount]="rendererService.pageCount"
-                (save)="onSave()"
+                (save)="save()"
                 (upload)="onUploadClick()"
                 (zoomIn)="onZoomIn()"
                 (zoomOut)="onZoomOut()"
@@ -1498,7 +1494,7 @@ i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "21.2.13", ngImpo
                 [colors]="paletteColors"
                 [currentPage]="currentPage"
                 [pageCount]="rendererService.pageCount"
-                (save)="onSave()"
+                (save)="save()"
                 (upload)="onUploadClick()"
                 (zoomIn)="onZoomIn()"
                 (zoomOut)="onZoomOut()"
@@ -1522,7 +1518,7 @@ i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "21.2.13", ngImpo
                 [colors]="paletteColors"
                 [currentPage]="currentPage"
                 [pageCount]="rendererService.pageCount"
-                (save)="onSave()"
+                (save)="save()"
                 (upload)="onUploadClick()"
                 (zoomIn)="onZoomIn()"
                 (zoomOut)="onZoomOut()"
@@ -1546,7 +1542,7 @@ i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "21.2.13", ngImpo
                 [colors]="paletteColors"
                 [currentPage]="currentPage"
                 [pageCount]="rendererService.pageCount"
-                (save)="onSave()"
+                (save)="save()"
                 (upload)="onUploadClick()"
                 (zoomIn)="onZoomIn()"
                 (zoomOut)="onZoomOut()"
@@ -1570,7 +1566,7 @@ i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "21.2.13", ngImpo
                 [colors]="paletteColors"
                 [currentPage]="currentPage"
                 [pageCount]="rendererService.pageCount"
-                (save)="onSave()"
+                (save)="save()"
                 (upload)="onUploadClick()"
                 (zoomIn)="onZoomIn()"
                 (zoomOut)="onZoomOut()"
