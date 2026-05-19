@@ -1,0 +1,16 @@
+{
+  "mimeTypes": {
+    ".mjs": "text/javascript",
+    ".wasm": "application/wasm",
+    ".json": "application/json",
+    ".woff": "font/woff",
+    ".woff2": "font/woff2",
+    ".ftl": "text/plain",
+    ".bcmap": "application/octet-stream",
+    ".pfb": "application/octet-stream"
+  },
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*", "/*.{css,js,mjs,wasm,png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf,eot,map,ftl,bcmap,pfb}"]
+  }
+}

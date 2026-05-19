@@ -1,5 +1,5 @@
 import * as i0 from '@angular/core';
-import { signal, computed, Injectable, inject, Pipe, EventEmitter, Output, Input, Component, effect, ViewChild, InjectionToken, ApplicationRef, ElementRef, ViewChildren, HostListener } from '@angular/core';
+import { signal, computed, Injectable, inject, Pipe, EventEmitter, Output, Input, Component, effect, ViewChild, DOCUMENT, InjectionToken, ApplicationRef, ElementRef, ViewChildren, HostListener } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
 
@@ -859,15 +859,19 @@ i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "21.2.13", ngImpo
                 type: Input
             }] } });
 
+function baseHref() {
+    const doc = inject(DOCUMENT);
+    return doc.querySelector('base')?.href ?? doc.baseURI ?? '/';
+}
 const PDFJS_WORKER_URL = new InjectionToken('PDFJS_WORKER_URL', {
     providedIn: 'root',
-    factory: () => '/pdf.worker.mjs',
+    factory: () => baseHref() + 'pdf.worker.mjs',
 });
 // Directory URL containing pdfjs-dist WASM files (jbig2.wasm, openjpeg.wasm, etc.)
 // Required for pdfjs-dist 5.x to decode JBIG2/CCITTFax Group-4 images.
 const PDFJS_WASM_URL = new InjectionToken('PDFJS_WASM_URL', {
     providedIn: 'root',
-    factory: () => '/wasm/',
+    factory: () => baseHref() + 'wasm/',
 });
 
 class PdfRendererService {
